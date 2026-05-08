@@ -767,135 +767,140 @@ input[type="range"]::-moz-range-thumb {
 </div>
 
 <script type="module">
-const ideologies = [
-    { name: "Conservatism", e: 0,   c: 0,   i: 0   },
-    { name: "Fascism",      e: 0,   c: 0,   i: 100 },
-    { name: "Liberalism",   e: 0,   c: 100, i: 0   },
-    { name: "Anarchism",    e: 0,   c: 100, i: 100 },
-    { name: "Communism",    e: 100, c: 0,   i: 0   },
-    { name: "Ecologism",    e: 100, c: 0,   i: 100 },
-    { name: "Technocracy",  e: 100, c: 100, i: 0   },
-    { name: "Socialism",    e: 100, c: 100, i: 100 }
-];
+    // 1. Importation des outils Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
-/* expose to window for onclick */
-window.calculate = calculate;
-window.goBack = goBack;
-window.openHistory = openHistory;
+    // 2. Vos identifiants secrets Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDdqoq0zKyZpLTdRsBpf7dpupgM7eWcVNc",
+        authDomain: "political-map-e5391.firebaseapp.com",
+        projectId: "political-map-e5391",
+        storageBucket: "political-map-e5391.firebasestorage.app",
+        messagingSenderId: "572979512370",
+        appId: "1:572979512370:web:d077983b62922dd754e82b",
+        measurementId: "G-2T89DHP2WF"
+    };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+    // 3. Connexion à la base de données
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDdqoq0zKyZplTdRsBpf7dpupgM7eWcVNc",
-    authDomain: "political-map-e5391.firebaseapp.com",
-    projectId: "political-map-e5391",
-    storageBucket: "political-map-e5391.firebasestorage.app",
-    messagingSenderId: "572979512370",
-    appId: "1:572979512370:web:d077983b62922dd754e82b"
-};
+    // Liste des idéologies
+    const ideologies = [
+        { name: "Conservatism", e: 0,   c: 0,   i: 0   },
+        { name: "Fascism",      e: 0,   c: 0,   i: 100 },
+        { name: "Liberalism",   e: 0,   c: 100, i: 0   },
+        { name: "Anarchism",    e: 0,   c: 100, i: 100 },
+        { name: "Communism",    e: 100, c: 0,   i: 0   },
+        { name: "Ecologism",    e: 100, c: 0,   i: 100 },
+        { name: "Technocracy",  e: 100, c: 100, i: 0   },
+        { name: "Socialism",    e: 100, c: 100, i: 100 }
+    ];
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    // --- FONCTION : CALCULER ET SAUVEGARDER ---
+    window.calculate = async function() {
+        const uE = +document.getElementById('e').value;
+        const uC = +document.getElementById('c').value;
+        const uI = +document.getElementById('i').value;
 
-function updateCount(n) {
-    document.getElementById('hist-count').textContent = n;
-}
+        // Calcul du résultat
+        const scored = ideologies.map(x => ({
+            name: x.name,
+            dist: Math.sqrt((x.e-uE)**2 + (x.c-uC)**2 + (x.i-uI)**2)
+        })).sort((a,b) => a.dist - b.dist);
 
-/* ── First visit ── */
-if (!sessionStorage.getItem('visited')) {
-    sessionStorage.setItem('visited', '1');
-    document.getElementById('modal').classList.add('on');
-}
+        const closest = scored[0].dist;
+        const matches = scored.filter(s => s.dist - closest < 35);
+        const resultText = matches.length >= 8 ? 'Total Centrism' : matches.map(m => m.name).join(' + ');
 
-/* fetch count on load */
-getDocs(collection(db, 'results')).then(snap => updateCount(snap.size)).catch(() => {});
-
-/* ── Calculate ── */
-async function calculate() {
-    const uE = +document.getElementById('e').value;
-    const uC = +document.getElementById('c').value;
-    const uI = +document.getElementById('i').value;
-
-    const scored = ideologies.map(x => ({
-        name: x.name,
-        dist: Math.sqrt((x.e-uE)**2 + (x.c-uC)**2 + (x.i-uI)**2)
-    })).sort((a,b) => a.dist - b.dist);
-
-    const closest = scored[0].dist;
-    const matches = scored.filter(s => s.dist - closest < 35);
-    const resultNames = matches.length >= 8 ? ['Total Centrism'] : matches.map(m => m.name);
-
-    const label = document.getElementById('result-label');
-    if (resultNames[0] === 'Total Centrism') {
-        label.innerHTML = '<span class="res-name">Total Centrism</span>';
-    } else {
-        label.innerHTML = resultNames.map((n, i) =>
-            (i > 0 ? '<span class="res-plus">+</span>' : '') +
-            `<span class="res-name">${n}</span>`
-        ).join('');
-    }
-
-    document.getElementById('result-screen').classList.add('on');
-
-    /* save to Firestore */
-    try {
-        await addDoc(collection(db, 'results'), {
-            result: resultNames.join(' + '),
-            e: uE, c: uC, i: uI,
-            date: new Date().toISOString()
-        });
-        const snap = await getDocs(collection(db, 'results'));
-        updateCount(snap.size);
-    } catch(err) {
-        console.error('Firestore write error:', err);
-    }
-}
-
-function goBack() {
-    document.getElementById('result-screen').classList.remove('on');
-}
-
-/* ── History modal ── */
-async function openHistory() {
-    document.getElementById('hist-modal').classList.add('on');
-    await renderHistory();
-}
-
-async function renderHistory() {
-    const container = document.getElementById('hist-list-container');
-    container.innerHTML = '<p class="hist-empty" style="opacity:0.5">Loading...</p>';
-    try {
-        const q = query(collection(db, 'results'), orderBy('date', 'desc'));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-            container.innerHTML = '<p class="hist-empty">No results yet. Be the first!</p>';
-            return;
+        // Afficher à l'écran
+        const label = document.getElementById('result-label');
+        if (resultText === 'Total Centrism') {
+            label.innerHTML = '<span class="res-name">Total Centrism</span>';
+        } else {
+            label.innerHTML = matches.map((m, i) => (i > 0 ? '<span class="res-plus">+</span>' : '') + `<span class="res-name">${m.name}</span>`).join('');
         }
-        const entries = [];
-        snap.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
-        container.innerHTML = `
-            <div class="hist-list">
-                ${entries.map((entry, idx) => {
-                    const d = new Date(entry.date);
-                    const dateStr = d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                    return `
-                    <div class="hist-entry">
-                        <span class="hist-num">#${entries.length - idx}</span>
-                        <span class="hist-result">${entry.result}</span>
-                        <div class="hist-meta">
-                            <span class="hist-date">${dateStr}</span>
-                            <span class="hist-sliders">E ${entry.e}% · C ${entry.c}% · I ${entry.i}%</span>
-                        </div>
-                    </div>`;
-                }).join('')}
-            </div>
-        `;
-    } catch(err) {
-        container.innerHTML = '<p class="hist-empty">Error loading history.</p>';
-        console.error(err);
+        document.getElementById('result-screen').classList.add('on');
+
+        // ENVOYER À FIREBASE
+        try {
+            await addDoc(collection(db, 'results'), {
+                result: resultText,
+                e: uE, c: uC, i: uI,
+                date: new Date().toISOString()
+            });
+            updateCount(); // Met à jour le petit compteur
+        } catch(err) {
+            console.error("Erreur de sauvegarde:", err);
+        }
+    };
+
+    // --- FONCTION : FERMER LE RÉSULTAT ---
+    window.goBack = function() {
+        document.getElementById('result-screen').classList.remove('on');
+    };
+
+    // --- FONCTION : AFFICHER L'HISTORIQUE ---
+    window.openHistory = async function() {
+        document.getElementById('hist-modal').classList.add('on');
+        const container = document.getElementById('hist-list-container');
+        container.innerHTML = '<p class="hist-empty">Chargement de l\'historique...</p>';
+
+        try {
+            // Demande les résultats à Firebase, triés du plus récent au plus ancien
+            const q = query(collection(db, 'results'), orderBy('date', 'desc'));
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+                container.innerHTML = '<p class="hist-empty">Aucun résultat pour le moment !</p>';
+                return;
+            }
+
+            // Construit la liste html
+            let html = '<div class="hist-list">';
+            let index = snap.size;
+            snap.forEach(doc => {
+                const data = doc.data();
+                const d = new Date(data.date);
+                const dateStr = d.toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+                
+                html += `
+                <div class="hist-entry">
+                    <span class="hist-num">#${index}</span>
+                    <span class="hist-result">${data.result}</span>
+                    <div class="hist-meta">
+                        <span class="hist-date">${dateStr}</span>
+                        <span class="hist-sliders">E:${data.e}% · C:${data.c}% · I:${data.i}%</span>
+                    </div>
+                </div>`;
+                index--;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+
+        } catch(err) {
+            container.innerHTML = '<p class="hist-empty" style="color:red;">Erreur de connexion à la base de données.</p>';
+            console.error(err);
+        }
+    };
+
+    // --- FONCTION : METTRE A JOUR LE COMPTEUR ---
+    async function updateCount() {
+        try {
+            const snap = await getDocs(collection(db, 'results'));
+            document.getElementById('hist-count').textContent = snap.size;
+        } catch(e) {}
     }
-}
+
+    // Gestion de la modale de bienvenue
+    if (!sessionStorage.getItem('visited')) {
+        sessionStorage.setItem('visited', '1');
+        document.getElementById('modal').classList.add('on');
+    }
+
+    // Lancer le compteur au chargement de la page
+    updateCount();
 </script>
 </body>
 </html>
