@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Political Profile</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0c0c0c;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        h1 {
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #444;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .axis {
+            margin-bottom: 2rem;
+        }
+
+        .axis-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        .axis-labels .left  { color: #444; }
+        .axis-labels .right { color: #bbb; }
+
+        input[type="range"] {
+            width: 100%;
+            appearance: none;
+            height: 1px;
+            background: #222;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .val {
+            text-align: right;
+            font-size: 0.6rem;
+            color: #333;
+            margin-top: 0.3rem;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            margin-top: 2.5rem;
+            padding: 0.85rem;
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #888;
+            font-family: 'Courier New', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        button:hover {
+            border-color: #666;
+            color: #e0e0e0;
+        }
+
+        #result-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #0c0c0c;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #result-screen.on { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-block {
+            margin-bottom: 1.2rem;
+        }
+
+        .result-main {
+            font-size: clamp(1.8rem, 6vw, 3.2rem);
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            color: #e0e0e0;
+        }
+
+        .result-sub {
+            font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #3a3a3a;
+            margin-top: 0.3rem;
+        }
+
+        #result-label {
+            max-width: 720px;
+            margin-bottom: 3rem;
+        }
+
+        .sep {
+            display: block;
+            color: #1e1e1e;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            margin: 0.4rem 0;
+        }
+
+        #back {
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #2a2a2a;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            margin-top: 0;
+            transition: color 0.2s;
+        }
+
+        #back:hover { color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <h1>Political Profile</h1>
+
+    <div class="axis">
+        <div class="axis-labels">
+            <span class="left">Competition</span>
+            <span class="right">Empathy</span>
+        </div>
+        <input type="range" id="e" min="0" max="100" value="50" step="1" oninput="show('eV',this.value)">
+        <div class="val"><span id="eV">50</span>%</div>
+    </div>
+
+    <div class="axis">
+        <div class="axis-labels">
+            <span class="left">Conservatism</span>
+            <span class="right">Curiosity</span>
+        </div>
+        <input type="range" id="c" min="0" max="100" value="50" step="1" oninput="show('cV',this.value)">
+        <div class="val"><span id="cV">50</span>%</div>
+    </div>
+
+    <div class="axis">
+        <div class="axis-labels">
+            <span class="left">Pragmatism</span>
+            <span class="right">Idealism</span>
+        </div>
+        <input type="range" id="i" min="0" max="100" value="50" step="1" oninput="show('iV',this.value)">
+        <div class="val"><span id="iV">50</span>%</div>
+    </div>
+
+    <button onclick="calculate()">Calculate →</button>
+</div>
+
+<div id="result-screen">
+    <div id="result-label"></div>
+    <button id="back" onclick="goBack()">← recalculate</button>
+</div>
+
+<script>
+    const ideologies = [
+        { name: "Conservatism", e: 0,   c: 0,   i: 0   },
+        { name: "Fascism",      e: 0,   c: 0,   i: 100 },
+        { name: "Liberalism",   e: 0,   c: 100, i: 0   },
+        { name: "Anarchism",    e: 0,   c: 100, i: 100 },
+        { name: "Communism",    e: 100, c: 0,   i: 0   },
+        { name: "Ecologism",    e: 100, c: 0,   i: 100 },
+        { name: "Technocracy",  e: 100, c: 100, i: 0   },
+        { name: "Socialism",    e: 100, c: 100, i: 100 }
+    ];
+
+    function show(id, val) {
+        document.getElementById(id).textContent = val;
+    }
+
+    function calculate() {
+        const uE = +document.getElementById('e').value;
+        const uC = +document.getElementById('c').value;
+        const uI = +document.getElementById('i').value;
+
+        const scored = ideologies.map(x => ({
+            name: x.name,
+            dist: Math.sqrt((x.e - uE) ** 2 + (x.c - uC) ** 2 + (x.i - uI) ** 2)
+        })).sort((a, b) => a.dist - b.dist);
+
+        const closest = scored[0].dist;
+        const matches = scored.filter(s => s.dist - closest < 35);
+
+        const label = document.getElementById('result-label');
+
+        if (matches.length >= 8) {
+            label.innerHTML = `<div class="result-main">Total Centrism</div>`;
+        } else {
+            label.innerHTML = matches.map((m, i) => `
+                ${i > 0 ? '<div class="sep">+</div>' : ''}
+                <div class="result-main">${m.name}</div>
+            `).join('');
+        }
+
+        document.getElementById('result-screen').classList.add('on');
+    }
+
+    function goBack() {
+        document.getElementById('result-screen').classList.remove('on');
+    }
+</script>
+</body>
+</html>
