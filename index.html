@@ -1,252 +1,685 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Political Profile</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<title>Political Profile</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
 
-        body {
-            background: #0c0c0c;
-            color: #e0e0e0;
-            font-family: 'Courier New', monospace;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .wrap {
-            width: 100%;
-            max-width: 520px;
-        }
+:root {
+    --bg: #08090d;
+    --surface: #10121a;
+    --border: #252838;
+    --border-bright: #363b5a;
+    --text: #d6d9eb;
+    --text-dim: #7a80a8;
+    --text-bright: #f0f2fc;
+    --accent: #818cf8;
+    --accent-glow: rgba(129,140,248,0.12);
+    --accent2: #c4b5fd;
+}
 
-        h1 {
-            font-size: 0.65rem;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: #444;
-            margin-bottom: 3rem;
-            text-align: center;
-        }
+html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+}
 
-        .axis {
-            margin-bottom: 2rem;
-        }
+/* animated background grid */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+}
 
-        .axis-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.65rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 0.6rem;
-        }
+body::after {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
 
-        .axis-labels .left  { color: #444; }
-        .axis-labels .right { color: #bbb; }
+.page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+}
 
-        input[type="range"] {
-            width: 100%;
-            appearance: none;
-            height: 1px;
-            background: #222;
-            outline: none;
-            cursor: pointer;
-        }
+.card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+}
 
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            cursor: pointer;
-        }
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
 
-        .val {
-            text-align: right;
-            font-size: 0.6rem;
-            color: #333;
-            margin-top: 0.3rem;
-        }
+.header {
+    margin-bottom: 2.8rem;
+    text-align: center;
+}
 
-        button {
-            display: block;
-            width: 100%;
-            margin-top: 2.5rem;
-            padding: 0.85rem;
-            background: transparent;
-            border: 1px solid #2a2a2a;
-            color: #888;
-            font-family: 'Courier New', monospace;
-            font-size: 0.65rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: border-color 0.2s, color 0.2s;
-        }
+.header-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+    opacity: 0.8;
+}
 
-        button:hover {
-            border-color: #666;
-            color: #e0e0e0;
-        }
+.header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: -0.01em;
+}
 
-        #result-screen {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: #0c0c0c;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            animation: fadeIn 0.5s ease;
-        }
+.axes { display: flex; flex-direction: column; gap: 2rem; }
 
-        #result-screen.on { display: flex; }
+.axis-wrap {}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+.axis-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
 
-        .result-block {
-            margin-bottom: 1.2rem;
-        }
+.axis-left {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 400;
+}
 
-        .result-main {
-            font-size: clamp(1.8rem, 6vw, 3.2rem);
-            letter-spacing: 0.04em;
-            line-height: 1.2;
-            color: #e0e0e0;
-        }
+.axis-right {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-bright);
+    font-weight: 500;
+}
 
-        .result-sub {
-            font-size: clamp(0.65rem, 1.5vw, 0.8rem);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: #3a3a3a;
-            margin-top: 0.3rem;
-        }
+.axis-val {
+    font-size: 0.65rem;
+    color: var(--accent);
+    font-weight: 500;
+    min-width: 36px;
+    text-align: center;
+    background: var(--accent-glow);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
 
-        #result-label {
-            max-width: 720px;
-            margin-bottom: 3rem;
-        }
+.slider-track {
+    position: relative;
+    height: 36px;
+    display: flex;
+    align-items: center;
+}
 
-        .sep {
-            display: block;
-            color: #1e1e1e;
-            font-size: clamp(1rem, 2vw, 1.4rem);
-            margin: 0.4rem 0;
-        }
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border-bright);
+    outline: none;
+    cursor: pointer;
+    border-radius: 2px;
+}
 
-        #back {
-            font-size: 0.6rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: #2a2a2a;
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: auto;
-            padding: 0;
-            margin-top: 0;
-            transition: color 0.2s;
-        }
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(99,102,241,0.5);
+    transition: box-shadow 0.2s, transform 0.15s;
+}
 
-        #back:hover { color: #666; }
-    </style>
+input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 20px rgba(99,102,241,0.8);
+    transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(99,102,241,0.5);
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2.5rem 0;
+}
+
+.calc-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.calc-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+}
+
+.calc-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.calc-btn:active { transform: translateY(0); }
+
+/* RESULT SCREEN */
+#result-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+#result-screen.on {
+    display: flex;
+    animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-glow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.result-tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    opacity: 0.7;
+}
+
+#result-label {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin-bottom: 3.5rem;
+}
+
+.res-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 400;
+    color: var(--text-bright);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.res-plus {
+    display: block;
+    font-size: 1.5rem;
+    color: var(--border-bright);
+    margin: 0.5rem 0;
+    font-weight: 300;
+}
+
+.back-btn {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    cursor: pointer;
+    padding: 0.5rem 1.4rem;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: color 0.2s, border-color 0.2s;
+    width: auto;
+    margin-top: 0;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+}
+
+/* INFO BUTTON */
+.info-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 50;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.info-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 16px rgba(99,102,241,0.3);
+}
+
+/* MODAL */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(8,9,13,0.85);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.modal-overlay.on {
+    display: flex;
+    animation: fadeIn 0.3s ease forwards;
+}
+@keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+}
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 2.5rem;
+    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+}
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-close {
+    position: absolute;
+    top: 1.2rem; right: 1.4rem;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    width: auto;
+    margin: 0;
+}
+.modal-close:hover { color: var(--text-bright); background: var(--border); }
+.modal h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    margin-bottom: 0.6rem;
+}
+.modal-intro {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.modal-section-title {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    opacity: 0.8;
+}
+.axis-explain {
+    margin-bottom: 1rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.01);
+}
+.axis-explain-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.axis-explain-header .left  { color: var(--text-dim); }
+.axis-explain-header .right { color: var(--text); }
+.axis-explain p { font-size: 0.82rem; color: var(--text); line-height: 1.6; }
+.ideo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+}
+.ideo-card {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.01);
+    transition: border-color 0.2s;
+}
+.ideo-card:hover { border-color: var(--border-bright); }
+.ideo-card-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--text-bright);
+    margin-bottom: 0.35rem;
+}
+.ideo-card-desc { font-size: 0.75rem; color: var(--text); line-height: 1.55; }
+.ideo-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.6rem; }
+.tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 100px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+}
+
+/* scanline overlay on result */
+#result-screen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+}
+</style>
 </head>
 <body>
 
-<div class="wrap">
-    <h1>Political Profile</h1>
-
-    <div class="axis">
-        <div class="axis-labels">
-            <span class="left">Competition</span>
-            <span class="right">Empathy</span>
+<div class="page">
+    <div class="card">
+        <div class="header">
+            <div class="header-tag">Political Spectrum</div>
+            <h1>What is your profile?</h1>
         </div>
-        <input type="range" id="e" min="0" max="100" value="50" step="1" oninput="show('eV',this.value)">
-        <div class="val"><span id="eV">50</span>%</div>
-    </div>
 
-    <div class="axis">
-        <div class="axis-labels">
-            <span class="left">Conservatism</span>
-            <span class="right">Curiosity</span>
+        <div class="axes">
+            <div class="axis-wrap">
+                <div class="axis-labels">
+                    <span class="axis-left">Competition</span>
+                    <span class="axis-val" id="eV">50%</span>
+                    <span class="axis-right">Empathy</span>
+                </div>
+                <div class="slider-track">
+                    <input type="range" id="e" min="0" max="100" value="50" step="1"
+                        oninput="document.getElementById('eV').textContent=this.value+'%'">
+                </div>
+            </div>
+
+            <div class="axis-wrap">
+                <div class="axis-labels">
+                    <span class="axis-left">Conservatism</span>
+                    <span class="axis-val" id="cV">50%</span>
+                    <span class="axis-right">Curiosity</span>
+                </div>
+                <div class="slider-track">
+                    <input type="range" id="c" min="0" max="100" value="50" step="1"
+                        oninput="document.getElementById('cV').textContent=this.value+'%'">
+                </div>
+            </div>
+
+            <div class="axis-wrap">
+                <div class="axis-labels">
+                    <span class="axis-left">Pragmatism</span>
+                    <span class="axis-val" id="iV">50%</span>
+                    <span class="axis-right">Idealism</span>
+                </div>
+                <div class="slider-track">
+                    <input type="range" id="i" min="0" max="100" value="50" step="1"
+                        oninput="document.getElementById('iV').textContent=this.value+'%'">
+                </div>
+            </div>
         </div>
-        <input type="range" id="c" min="0" max="100" value="50" step="1" oninput="show('cV',this.value)">
-        <div class="val"><span id="cV">50</span>%</div>
-    </div>
 
-    <div class="axis">
-        <div class="axis-labels">
-            <span class="left">Pragmatism</span>
-            <span class="right">Idealism</span>
+        <div class="divider"></div>
+        <button class="calc-btn" onclick="calculate()">Calculate my profile →</button>
+    </div>
+</div>
+
+<button class="info-btn" onclick="document.getElementById('modal').classList.add('on')" title="How it works">?</button>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('on')">
+    <div class="modal">
+        <button class="modal-close" onclick="document.getElementById('modal').classList.remove('on')">×</button>
+        <h2>How it works</h2>
+        <p class="modal-intro">
+            Move the three sliders to reflect your personal values. Each slider represents a tension between two opposing political tendencies. Once you click <em>Calculate</em>, the site finds which ideology — or blend of ideologies — is closest to your combination of values in a 3D political space.
+        </p>
+
+        <div class="modal-section-title">The three axes</div>
+
+        <div class="axis-explain">
+            <div class="axis-explain-header">
+                <span class="left">Competition</span>
+                <span class="right">Empathy</span>
+            </div>
+            <p>Do you believe society works best when individuals compete freely, or when people prioritise cooperation and collective wellbeing? High empathy favours solidarity and social safety nets; high competition favours meritocracy and individual responsibility.</p>
         </div>
-        <input type="range" id="i" min="0" max="100" value="50" step="1" oninput="show('iV',this.value)">
-        <div class="val"><span id="iV">50</span>%</div>
-    </div>
 
-    <button onclick="calculate()">Calculate →</button>
+        <div class="axis-explain">
+            <div class="axis-explain-header">
+                <span class="left">Conservatism</span>
+                <span class="right">Curiosity</span>
+            </div>
+            <p>Do you value tradition, stability and proven institutions, or do you embrace change, experimentation and new ideas? Conservatism protects what exists; curiosity questions and reimagines it.</p>
+        </div>
+
+        <div class="axis-explain">
+            <div class="axis-explain-header">
+                <span class="left">Pragmatism</span>
+                <span class="right">Idealism</span>
+            </div>
+            <p>Do you prefer realistic, step-by-step solutions within existing systems, or do you pursue a radically better world even at the cost of disruption? Pragmatists work with what is; idealists work toward what could be.</p>
+        </div>
+
+        <div class="divider" style="margin: 2rem 0 1.5rem;"></div>
+        <div class="modal-section-title">The eight ideologies</div>
+
+        <div class="ideo-grid">
+            <div class="ideo-card">
+                <div class="ideo-card-name">Conservatism</div>
+                <div class="ideo-card-desc">Prioritises tradition, order and established institutions. Sceptical of radical change, focuses on stability and cultural continuity.</div>
+                <div class="ideo-card-tags"><span class="tag">Tradition</span><span class="tag">Order</span><span class="tag">Stability</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Fascism</div>
+                <div class="ideo-card-desc">Combines authoritarian nationalism with a utopian vision of national rebirth. Rejects pluralism and individual rights in favour of collective power.</div>
+                <div class="ideo-card-tags"><span class="tag">Nationalism</span><span class="tag">Authority</span><span class="tag">Unity</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Liberalism</div>
+                <div class="ideo-card-desc">Champions individual freedoms, free markets and openness to innovation. Trusts decentralised systems over top-down control.</div>
+                <div class="ideo-card-tags"><span class="tag">Freedom</span><span class="tag">Markets</span><span class="tag">Innovation</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Anarchism</div>
+                <div class="ideo-card-desc">Opposes all forms of hierarchical authority, seeking a society built on voluntary cooperation, mutual aid and radical equality.</div>
+                <div class="ideo-card-tags"><span class="tag">No hierarchy</span><span class="tag">Mutual aid</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Communism</div>
+                <div class="ideo-card-desc">Advocates collective ownership of production and the abolition of class distinctions, aiming for a society that meets everyone's needs equally.</div>
+                <div class="ideo-card-tags"><span class="tag">Collective</span><span class="tag">Equality</span><span class="tag">Class</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Ecologism</div>
+                <div class="ideo-card-desc">Places environmental sustainability at the centre of politics. Sees human society as inseparable from nature and calls for systemic transformation to protect it.</div>
+                <div class="ideo-card-tags"><span class="tag">Nature</span><span class="tag">Sustainability</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Technocracy</div>
+                <div class="ideo-card-desc">Believes governance should be guided by scientific expertise and data rather than ideology or popular vote. Efficiency and evidence are the highest values.</div>
+                <div class="ideo-card-tags"><span class="tag">Expertise</span><span class="tag">Science</span><span class="tag">Efficiency</span></div>
+            </div>
+            <div class="ideo-card">
+                <div class="ideo-card-name">Socialism</div>
+                <div class="ideo-card-desc">Seeks greater social equality through democratic redistribution of wealth and strong public services, balancing individual rights with collective responsibility.</div>
+                <div class="ideo-card-tags"><span class="tag">Redistribution</span><span class="tag">Democracy</span></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="result-screen">
+    <div class="result-glow"></div>
+    <div class="result-tag">Your political profile</div>
     <div id="result-label"></div>
-    <button id="back" onclick="goBack()">← recalculate</button>
+    <button class="back-btn" onclick="goBack()">← Recalculate</button>
 </div>
 
 <script>
-    const ideologies = [
-        { name: "Conservatism", e: 0,   c: 0,   i: 0   },
-        { name: "Fascism",      e: 0,   c: 0,   i: 100 },
-        { name: "Liberalism",   e: 0,   c: 100, i: 0   },
-        { name: "Anarchism",    e: 0,   c: 100, i: 100 },
-        { name: "Communism",    e: 100, c: 0,   i: 0   },
-        { name: "Ecologism",    e: 100, c: 0,   i: 100 },
-        { name: "Technocracy",  e: 100, c: 100, i: 0   },
-        { name: "Socialism",    e: 100, c: 100, i: 100 }
-    ];
+const ideologies = [
+    { name: "Conservatism", e: 0,   c: 0,   i: 0   },
+    { name: "Fascism",      e: 0,   c: 0,   i: 100 },
+    { name: "Liberalism",   e: 0,   c: 100, i: 0   },
+    { name: "Anarchism",    e: 0,   c: 100, i: 100 },
+    { name: "Communism",    e: 100, c: 0,   i: 0   },
+    { name: "Ecologism",    e: 100, c: 0,   i: 100 },
+    { name: "Technocracy",  e: 100, c: 100, i: 0   },
+    { name: "Socialism",    e: 100, c: 100, i: 100 }
+];
 
-    function show(id, val) {
-        document.getElementById(id).textContent = val;
+if (!sessionStorage.getItem('visited')) {
+    sessionStorage.setItem('visited', '1');
+    document.getElementById('modal').classList.add('on');
+}
+
+function calculate() {
+    const uE = +document.getElementById('e').value;
+    const uC = +document.getElementById('c').value;
+    const uI = +document.getElementById('i').value;
+
+    const scored = ideologies.map(x => ({
+        name: x.name,
+        dist: Math.sqrt((x.e-uE)**2 + (x.c-uC)**2 + (x.i-uI)**2)
+    })).sort((a,b) => a.dist - b.dist);
+
+    const closest = scored[0].dist;
+    const matches = scored.filter(s => s.dist - closest < 35);
+
+    const label = document.getElementById('result-label');
+
+    if (matches.length >= 8) {
+        label.innerHTML = '<span class="res-name">Total Centrism</span>';
+    } else {
+        label.innerHTML = matches.map((m, i) =>
+            (i > 0 ? '<span class="res-plus">+</span>' : '') +
+            `<span class="res-name">${m.name}</span>`
+        ).join('');
     }
 
-    function calculate() {
-        const uE = +document.getElementById('e').value;
-        const uC = +document.getElementById('c').value;
-        const uI = +document.getElementById('i').value;
+    document.getElementById('result-screen').classList.add('on');
+}
 
-        const scored = ideologies.map(x => ({
-            name: x.name,
-            dist: Math.sqrt((x.e - uE) ** 2 + (x.c - uC) ** 2 + (x.i - uI) ** 2)
-        })).sort((a, b) => a.dist - b.dist);
-
-        const closest = scored[0].dist;
-        const matches = scored.filter(s => s.dist - closest < 35);
-
-        const label = document.getElementById('result-label');
-
-        if (matches.length >= 8) {
-            label.innerHTML = `<div class="result-main">Total Centrism</div>`;
-        } else {
-            label.innerHTML = matches.map((m, i) => `
-                ${i > 0 ? '<div class="sep">+</div>' : ''}
-                <div class="result-main">${m.name}</div>
-            `).join('');
-        }
-
-        document.getElementById('result-screen').classList.add('on');
-    }
-
-    function goBack() {
-        document.getElementById('result-screen').classList.remove('on');
-    }
+function goBack() {
+    document.getElementById('result-screen').classList.remove('on');
+}
 </script>
 </body>
 </html>
