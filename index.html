@@ -2,59 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Political Profile</title>
+    <title>Political Profile — Interactive Radar</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <div class="page">
-    <div class="card">
-        <div class="header">
-            <div class="header-tag">Political Spectrum</div>
-            <h1>What is your profile?</h1>
-        </div>
-
-        <div class="axes">
-            <div class="axis-wrap">
-                <div class="axis-labels">
-                    <span class="axis-left">Competition</span>
-                    <span class="axis-val" id="eV">50%</span>
-                    <span class="axis-right">Empathy</span>
-                </div>
-                <div class="slider-track">
-                    <input type="range" id="e" min="0" max="100" value="50" step="1"
-                        oninput="document.getElementById('eV').textContent=this.value+'%'">
-                </div>
+    <div class="main-container">
+        
+        <div class="left-panel">
+            <div class="header">
+                <div class="header-tag">Political Spectrum</div>
+                <h1>Interactive Radar</h1>
+            </div>
+            
+            <div class="radar-box">
+                <svg id="interactive-radar" viewBox="0 0 400 400" width="100%" height="100%">
+                    <polygon class="radar-grid" points="200,50 330,275 70,275" />
+                    <polygon class="radar-grid" points="200,125 265,237.5 135,237.5" />
+                    
+                    <line class="radar-axis" x1="200" y1="200" x2="200" y2="50" id="axis-idealism" data-axis="idealism" />
+                    <line class="radar-axis" x1="200" y1="200" x2="330" y2="275" id="axis-curiosity" data-axis="curiosity" />
+                    <line class="radar-axis" x1="200" y1="200" x2="70" y2="275" id="axis-empathy" data-axis="empathy" />
+                    
+                    <text class="radar-label" x="200" y="30" text-anchor="middle">Idealism</text>
+                    <text class="radar-label" x="345" y="290" text-anchor="start">Curiosity</text>
+                    <text class="radar-label" x="55" y="290" text-anchor="end">Empathy</text>
+                    
+                    <polygon id="radar-poly" points="" />
+                    
+                    <circle id="handle-idealism" class="radar-handle" r="12" cx="200" cy="125" data-axis="idealism" />
+                    <circle id="handle-curiosity" class="radar-handle" r="12" cx="265" cy="237.5" data-axis="curiosity" />
+                    <circle id="handle-empathy" class="radar-handle" r="12" cx="135" cy="237.5" data-axis="empathy" />
+                </svg>
+            </div>
+            
+            <div class="values-display">
+                <div class="val-item">Idealism: <span id="val-idealism">50%</span></div>
+                <div class="val-item">Curiosity: <span id="val-curiosity">50%</span></div>
+                <div class="val-item">Empathy: <span id="val-empathy">50%</span></div>
             </div>
 
-            <div class="axis-wrap">
-                <div class="axis-labels">
-                    <span class="axis-left">Conservatism</span>
-                    <span class="axis-val" id="cV">50%</span>
-                    <span class="axis-right">Curiosity</span>
-                </div>
-                <div class="slider-track">
-                    <input type="range" id="c" min="0" max="100" value="50" step="1"
-                        oninput="document.getElementById('cV').textContent=this.value+'%'">
-                </div>
-            </div>
-
-            <div class="axis-wrap">
-                <div class="axis-labels">
-                    <span class="axis-left">Pragmatism</span>
-                    <span class="axis-val" id="iV">50%</span>
-                    <span class="axis-right">Idealism</span>
-                </div>
-                <div class="slider-track">
-                    <input type="range" id="i" min="0" max="100" value="50" step="1"
-                        oninput="document.getElementById('iV').textContent=this.value+'%'">
-                </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="analyzeProfile()">Analyse</button>
+                <button class="action-btn outline" id="save-btn" onclick="saveProfile()">Send</button>
             </div>
         </div>
 
-        <div class="divider"></div>
-        <button class="calc-btn" onclick="calculate()">Generate my chart →</button>
+        <div class="right-panel">
+            <div class="info-card">
+                <h2 id="info-title">About the axes</h2>
+                <div class="divider"></div>
+                <div id="info-text">
+                    <p>Hover over an axis or drag a point to reveal details about that dimension of your profile.</p>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -69,17 +73,6 @@
         <div class="modal-section-title">Past results</div>
         <div id="hist-list-container"></div>
     </div>
-</div>
-
-<div id="result-screen">
-    <div class="result-glow"></div>
-    <div class="result-tag">Your political radar</div>
-    
-    <div class="chart-container">
-        <canvas id="radarChart"></canvas>
-    </div>
-    
-    <button class="back-btn" onclick="goBack()">← Recalculate</button>
 </div>
 
 <script type="module" src="app.js"></script>
